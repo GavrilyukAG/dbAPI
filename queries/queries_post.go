@@ -140,7 +140,7 @@ func PostGetParentTree(db *sql.DB, threadID int, limit int, desc bool, since int
 			queryStr += `
 			AND array[path[1]] && array(
 				SELECT path[1] FROM posts WHERE path[1] < (
-					SELECT path[1] FROM posts WHERE path && array[$3]::integer[]
+					SELECT path[1] FROM posts WHERE path && array[$3]::integer[] AND thread=$1
 					ORDER BY path[1] DESC, path
 					LIMIT 1
 				)
@@ -150,7 +150,8 @@ func PostGetParentTree(db *sql.DB, threadID int, limit int, desc bool, since int
 			queryStr += `
 			AND array[path[1]] && array(
 				SELECT path[1] FROM posts WHERE path[1] > (
-					SELECT path[1] FROM posts WHERE path && array[$3]::integer[] LIMIT 1
+					SELECT path[1] FROM posts WHERE path && array[$3]::integer[] AND thread=$1
+					LIMIT 1
 				)
 			)
 			`

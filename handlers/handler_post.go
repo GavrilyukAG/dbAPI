@@ -99,7 +99,6 @@ func (h *Handler) GetThreadPosts(w http.ResponseWriter, r *http.Request) {
 		case "desc":
 			desc, _ = strconv.ParseBool(r.URL.Query().Get(k))
 		case "since":
-			// since = r.URL.Query().Get(k)
 			since, _ = strconv.Atoi(r.URL.Query().Get(k))
 		case "sort":
 			sort = r.URL.Query().Get(k)

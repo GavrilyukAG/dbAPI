@@ -17,7 +17,7 @@ func handleRequests(handlers *handlers.Handler) {
 	router.HandleFunc("/api/forum/{slug}/create", handlers.CreateThread).Methods("POST")
 	router.HandleFunc("/api/forum/{slug}/details", handlers.GetForumDetails).Methods("GET")
 	router.HandleFunc("/api/forum/{slug}/threads", handlers.GetThreadsList).Methods("GET")
-	// router.HandleFunc("/api/forum/{slug}/users", handlers.GetUsersList).Methods("GET")
+	router.HandleFunc("/api/forum/{slug}/users", handlers.GetUsersList).Methods("GET")
 	//
 	// router.HandleFunc("/api/post/{id}/details", handlers.GetPostDetails).Methods("GET") //? GetThreadDetails
 	// router.HandleFunc("/api/post/{id}/details", handlers.UpdatePost).Methods("POST")

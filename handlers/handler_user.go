@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"strconv"
 
 	"github.com/gorilla/mux"
 	_ "github.com/lib/pq"
@@ -83,4 +84,57 @@ func (h *Handler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 
 		network.ResponseOK(w, user)
 	}
+}
+
+func (h *Handler) GetUsersList(w http.ResponseWriter, r *http.Request) {
+	slug := mux.Vars(r)["slug"]
+
+	var (
+		limit int    = 0
+		desc  bool   = false
+		since string = ""
+	)
+
+	for k, _ := range r.URL.Query() {
+		switch k {
+		case "limit":
+			limit, _ = strconv.Atoi(r.URL.Query().Get(k))
+		case "desc":
+			desc, _ = strconv.ParseBool(r.URL.Query().Get(k))
+		case "since":
+			since = r.URL.Query().Get(k)
+		}
+	}
+
+	_, err := queries.ForumGetBySlug(h.DB, slug)
+	if err == sql.ErrNoRows {
+		errMsg := models.Error{}
+		errMsg.ErrorForum(slug)
+		network.ResponseNotFound(w, errMsg)
+		return
+	}
+
+	var users models.Users
+	tmp, err := queries.UserGetAllBySlug(h.DB, slug, since, limit, desc)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	users = *tmp
+	network.ResponseOK(w, users)
+
+	// switch {
+	// case err != nil:
+	// 	network.ResponseNotFound(w, users)
+	// 	return
+	// case err == sql.ErrNoRows:
+	// 	errMsg := models.Error{}
+	// 	errMsg.ErrorForum(slug)
+	// 	network.ResponseNotFound(w, errMsg)
+	// 	return
+	// default:
+	// 	users = *tmp
+	// 	network.ResponseOK(w, users)
+	// 	return
+	// }
 }

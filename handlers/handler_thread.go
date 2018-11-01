@@ -106,11 +106,6 @@ func (h *Handler) GetThreadDetails(w http.ResponseWriter, r *http.Request) {
 	}
 
 	network.ResponseOK(w, thread)
-
-	// IF THREAD NOT EXISTS
-	// if err != nil {
-	// 	return
-	// }
 }
 
 func (h *Handler) UpdateThread(w http.ResponseWriter, r *http.Request) {
