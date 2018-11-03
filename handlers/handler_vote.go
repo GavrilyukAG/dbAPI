@@ -21,17 +21,31 @@ func (h *Handler) Vote(w http.ResponseWriter, r *http.Request) {
 	thread := models.Thread{}
 	threadID, err := strconv.Atoi(slugORid)
 	if err != nil {
-		tmp, _ := queries.ThreadGetBySlug(h.DB, slugORid) // slug
+		tmp, err := queries.ThreadGetBySlug(h.DB, slugORid) // slug
+		if err != nil {
+			errMsg := models.Error{}
+			errMsg.ErrorThreadBySlug(slugORid)
+			network.ResponseNotFound(w, errMsg)
+			return
+		}
 		thread = *tmp
 	} else {
-		tmp, _ := queries.ThreadGetByID(h.DB, threadID) // ID
+		tmp, err := queries.ThreadGetByID(h.DB, threadID) // ID
+		if err != nil {
+			errMsg := models.Error{}
+			errMsg.ErrorThreadById(slugORid)
+			network.ResponseNotFound(w, errMsg)
+			return
+		}
 		thread = *tmp
 	}
 
-	// if err != nil {
-	// 	log.Println("Such thread does not exist", err)
-	// 	return
-	// }
+	if _, err = queries.UserGetByNickname(h.DB, vote.Nickname); err == sql.ErrNoRows {
+		errMsg := models.Error{}
+		errMsg.ErrorUser(vote.Nickname)
+		network.ResponseNotFound(w, errMsg)
+		return
+	}
 
 	vote.Thread = thread.ID
 	oldVote, err := queries.VoteGetByNickname(h.DB, vote.Nickname)

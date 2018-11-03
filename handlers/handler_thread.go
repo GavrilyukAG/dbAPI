@@ -98,10 +98,22 @@ func (h *Handler) GetThreadDetails(w http.ResponseWriter, r *http.Request) {
 
 	threadID, err := strconv.Atoi(slugORid)
 	if err != nil {
-		tmp, _ := queries.ThreadGetBySlug(h.DB, slugORid)
+		tmp, err := queries.ThreadGetBySlug(h.DB, slugORid)
+		if err != nil {
+			errMsg := models.Error{}
+			errMsg.ErrorThreadBySlug(slugORid)
+			network.ResponseNotFound(w, errMsg)
+			return
+		}
 		thread = *tmp
 	} else {
-		tmp, _ := queries.ThreadGetByID(h.DB, threadID)
+		tmp, err := queries.ThreadGetByID(h.DB, threadID)
+		if err != nil {
+			errMsg := models.Error{}
+			errMsg.ErrorThreadById(slugORid)
+			network.ResponseNotFound(w, errMsg)
+			return
+		}
 		thread = *tmp
 	}
 
@@ -115,32 +127,53 @@ func (h *Handler) UpdateThread(w http.ResponseWriter, r *http.Request) {
 
 	threadID, err := strconv.Atoi(slugORid)
 	if err != nil {
-		tmp, _ := queries.ThreadGetBySlug(h.DB, slugORid)
+		tmp, err := queries.ThreadGetBySlug(h.DB, slugORid)
+		if err == sql.ErrNoRows {
+			errMsg := models.Error{}
+			errMsg.ErrorThreadBySlug(slugORid)
+			network.ResponseNotFound(w, errMsg)
+			return
+		}
 		threadID = tmp.ID
 	}
 	thread.ID = threadID
 
-	_, err = queries.ThreadGetByID(h.DB, threadID)
-	switch {
-	case err == sql.ErrNoRows:
-		log.Println("Thread not found", err)
+	if _, err = queries.ThreadGetByID(h.DB, threadID); err == sql.ErrNoRows {
+		errMsg := models.Error{}
+		errMsg.ErrorThreadById(slugORid)
+		network.ResponseNotFound(w, errMsg)
+		return
+	}
+
+	err = queries.ThreadUpdate(h.DB, &thread)
+	if err != nil {
+		log.Println("Can not UPDATE", err)
 		errMsg := models.Error{}
 		errMsg.ErrorUser(*thread.Slug)
-		network.ResponseNotFound(w, errMsg)
-	case err != nil:
-		log.Fatal(err)
-		log.Println("Thread doesn't exist", err)
+		network.ResponseConflict(w, errMsg)
 		return
-	default:
-		err = queries.ThreadUpdate(h.DB, &thread)
-		if err != nil {
-			log.Println("Can not UPDATE", err)
-			errMsg := models.Error{}
-			errMsg.ErrorUser(*thread.Slug)
-			network.ResponseConflict(w, errMsg)
-			return
-		}
-
-		network.ResponseOK(w, thread)
 	}
+
+	// _, err = queries.ThreadGetByID(h.DB, threadID)
+	// switch {
+	// case err == sql.ErrNoRows:
+	// 	log.Println("Thread not found", err)
+	// 	errMsg := models.Error{}
+	// 	errMsg.ErrorUser(*thread.Slug)
+	// 	network.ResponseNotFound(w, errMsg)
+	// case err != nil:
+	// 	log.Println("Thread doesn't exist", err)
+	// 	return
+	// default:
+	// 	err = queries.ThreadUpdate(h.DB, &thread)
+	// 	if err != nil {
+	// 		log.Println("Can not UPDATE", err)
+	// 		errMsg := models.Error{}
+	// 		errMsg.ErrorUser(*thread.Slug)
+	// 		network.ResponseConflict(w, errMsg)
+	// 		return
+	// 	}
+
+	// }
+	network.ResponseOK(w, thread)
 }

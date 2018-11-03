@@ -81,16 +81,14 @@ func UserGetAllBySlug(db *sql.DB, forumSlug, since string, limit int, desc bool)
 		}
 	}
 
+	queryStr += `
+		ORDER BY u.nickname COLLATE "ucs_basic"
+	`
+
 	if desc {
-		queryStr += `
-			ORDER BY u.nickname COLLATE "ucs_basic" DESC
-			LIMIT $2
-		`
+		queryStr += ` DESC LIMIT NULLIF($2, 0)`
 	} else {
-		queryStr += `
-			ORDER BY u.nickname COLLATE "ucs_basic"
-			LIMIT $2
-		`
+		queryStr += ` LIMIT NULLIF($2, 0)`
 	}
 
 	var (

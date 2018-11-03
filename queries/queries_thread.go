@@ -84,7 +84,7 @@ func ThreadQuery(db *sql.DB, forumSlug string, limit int, desc bool, since strin
 	if desc {
 		queryStr += " DESC"
 	}
-	queryStr += " LIMIT $2"
+	queryStr += " LIMIT NULLIF($2, 0)"
 
 	var rows *sql.Rows
 	var err error

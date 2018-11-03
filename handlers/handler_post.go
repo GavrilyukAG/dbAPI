@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"database/sql"
 	"dbAPI/models"
 	"dbAPI/network"
 	"dbAPI/queries"
@@ -18,19 +19,25 @@ func (h *Handler) CreatePost(w http.ResponseWriter, r *http.Request) {
 	json.NewDecoder(r.Body).Decode(&posts)
 	slugORid := mux.Vars(r)["slug_or_id"]
 
-	// var threadID int
 	threadID, err := strconv.Atoi(slugORid)
 	if err != nil {
 		res, err := queries.ThreadGetBySlug(h.DB, slugORid)
 		if err != nil {
-			log.Println("Such thread does not exist", err)
+			// log.Println("Such thread does not exist", err)
+			errMsg := models.Error{}
+			errMsg.ErrorThreadBySlug(slugORid)
+			network.ResponseNotFound(w, errMsg)
+			return
 		}
 		threadID = res.ID
-	} else {
-		_, err := queries.ThreadGetByID(h.DB, threadID)
-		if err != nil {
-			log.Println("Such thread does not exist", err)
-		}
+	}
+
+	if _, err = queries.ThreadGetByID(h.DB, threadID); err == sql.ErrNoRows {
+		id := strconv.Itoa(threadID)
+		errMsg := models.Error{}
+		errMsg.ErrorPostThread(id)
+		network.ResponseNotFound(w, errMsg)
+		return
 	}
 
 	t := time.Now()
@@ -49,20 +56,28 @@ func (h *Handler) CreatePost(w http.ResponseWriter, r *http.Request) {
 		}
 
 		post.Thread = threadID
+
+		if post.Parent != 0 {
+			parent, err := queries.PostGetById(h.DB, post.Parent)
+			if err != nil || post.Thread != parent.Thread {
+				errMsg := models.Error{}
+				errMsg.ErrorParent()
+				network.ResponseConflict(w, errMsg)
+				return
+			}
+		}
+
+		if _, err = queries.UserGetByNickname(h.DB, post.Author); err == sql.ErrNoRows {
+			errMsg := models.Error{}
+			errMsg.ErrorPostAuthor(post.Author)
+			network.ResponseNotFound(w, errMsg)
+			return
+		}
+
 		err = queries.PostInsert(h.DB, post)
 		if err != nil {
 			log.Println("Can not create post", err)
 		}
-		// log.Println(post.Path)
-		// if post.Parent != 0 {
-		// 	path := []int64{}
-		// 	// path = GetPostParentPath
-		// 	path = append(path, post.ID)
-		// 	// UpdatePostPath
-		// } else {
-		// 	// path := []int64{post.ID}
-		// 	post.Path = append(post.Path, post.ID)
-		// }
 	}
 
 	network.ResponseCreated(w, posts)
@@ -75,13 +90,19 @@ func (h *Handler) GetThreadPosts(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		res, err := queries.ThreadGetBySlug(h.DB, slugORid)
 		if err != nil {
-			log.Println("Such thread does not exist", err)
+			errMsg := models.Error{}
+			errMsg.ErrorThreadBySlug(slugORid)
+			network.ResponseNotFound(w, errMsg)
+			return
 		}
 		threadID = res.ID
 	} else {
 		_, err := queries.ThreadGetByID(h.DB, threadID)
 		if err != nil {
-			log.Println("Such thread does not exist", err)
+			errMsg := models.Error{}
+			errMsg.ErrorThreadById(slugORid)
+			network.ResponseNotFound(w, errMsg)
+			return
 		}
 	}
 
@@ -115,4 +136,35 @@ func (h *Handler) GetThreadPosts(w http.ResponseWriter, r *http.Request) {
 		posts = *queries.PostGetFlat(h.DB, threadID, limit, desc, since)
 	}
 	network.ResponseOK(w, posts)
+}
+
+func (h *Handler) GetPostDetails(w http.ResponseWriter, r *http.Request) {
+	id := mux.Vars(r)["id"]
+	postID, _ := strconv.Atoi(id)
+
+	postDetails := models.PostFull{}
+	tmp, err := queries.PostGetDetails(h.DB, postID)
+	if err != nil {
+		log.Println(err)
+	}
+	postDetails = *tmp
+
+	network.ResponseOK(w, postDetails)
+}
+
+func (h *Handler) UpdatePost(w http.ResponseWriter, r *http.Request) {
+	id := mux.Vars(r)["id"]
+	postID, _ := strconv.Atoi(id)
+
+	postMsg := models.PostUpdate{}           // var message string
+	json.NewDecoder(r.Body).Decode(&postMsg) // messgae
+
+	post := models.Post{}
+	tmp, err := queries.PostUpdate(h.DB, postID, postMsg.Message)
+	if err != nil {
+		log.Println("Can not update post", err)
+	}
+	post = *tmp
+
+	network.ResponseOK(w, post)
 }

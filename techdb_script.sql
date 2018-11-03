@@ -49,10 +49,3 @@ CREATE TABLE votes (
     thread INTEGER REFERENCES "threads" (id),
     voice INTEGER
 );
-
--- tpforumdb=# select id, path, parent from posts where path && (select array[path[1]] as parent_id from posts where path && array[2016]) order by path;
--- select * from (select id, path, row_number () over (order by path) from posts) p where row_number > ...
-
--- WITH p AS (select id, path, row_number () over (order by path) from posts)
--- SELECT id, path from p
--- where p.row_number > (select row_number from p where p.id=2016);
