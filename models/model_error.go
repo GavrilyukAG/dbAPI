@@ -20,6 +20,10 @@ func (e *Error) ErrorPostAuthor(author string) {
 	e.Message = "Can't find post author by nickname: " + author
 }
 
+func (e *Error) ErrorPost(postID string) {
+	e.Message = "Can't find post with id: " + postID
+}
+
 func (e *Error) ErrorPostThread(threadID string) {
 	e.Message = "Can't find post thread by id: " + threadID
 }

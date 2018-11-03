@@ -75,7 +75,7 @@ func (h *Handler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	default:
 		err = queries.UserUpdate(h.DB, &user)
 		if err != nil {
-			// log.Println("Can not UPDATE", err)
+			// log.Println("Cannot UPDATE", err)
 			errMsg := models.Error{}
 			errMsg.ErrorUser(user.Nickname)
 			network.ResponseConflict(w, errMsg)

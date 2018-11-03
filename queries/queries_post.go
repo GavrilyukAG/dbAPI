@@ -17,7 +17,6 @@ func PostInsert(db *sql.DB, post *models.Post) error {
         `,
 		post.Author, post.Forum, post.Thread, post.Message, post.Created, post.IsEdited, post.Parent).
 		Scan(&post.ID)
-	// Scan(&post.ID, &post.Author, &post.Forum, &post.Thread, &post.Message, &post.Created, &post.IsEdited, &post.Parent)
 
 	_, _ = db.Exec(`
 		UPDATE forums
@@ -54,7 +53,6 @@ func PostGetFlat(db *sql.DB, threadID, limit int, desc bool, since int) *models.
 	}
 
 	if err != nil {
-		// log.Fatal(err)
 		log.Println(err)
 	}
 
@@ -64,7 +62,6 @@ func PostGetFlat(db *sql.DB, threadID, limit int, desc bool, since int) *models.
 		var post models.Post
 		var path []byte
 		if err := rows.Scan(&post.ID, &post.Author, &post.Forum, &post.Thread, &post.Message, &post.Created, &post.IsEdited, &post.Parent, &path); err != nil {
-			// log.Fatal(err)
 			log.Println("Error with posts: ", err)
 		}
 		if post.ID != 0 {
@@ -106,7 +103,6 @@ func PostGetTree(db *sql.DB, threadID int, limit int, desc bool, since int) *mod
 	}
 
 	if err != nil {
-		// log.Fatal(err)
 		log.Println(err)
 	}
 
@@ -114,9 +110,7 @@ func PostGetTree(db *sql.DB, threadID int, limit int, desc bool, since int) *mod
 	posts := models.Posts{}
 	for rows.Next() {
 		var post models.Post
-		// var path []byte
 		if err := rows.Scan(&post.ID, &post.Author, &post.Forum, &post.Thread, &post.Message, &post.Created, &post.IsEdited, &post.Parent /*, &path*/); err != nil {
-			// log.Fatal(err)
 			log.Println("Error with posts: ", err)
 		}
 		if post.ID != 0 {
@@ -182,7 +176,6 @@ func PostGetParentTree(db *sql.DB, threadID int, limit int, desc bool, since int
 	}
 
 	if err != nil {
-		// log.Fatal(err)
 		log.Println("Parent tree query ERROR", err)
 	}
 
@@ -190,9 +183,7 @@ func PostGetParentTree(db *sql.DB, threadID int, limit int, desc bool, since int
 	posts := models.Posts{}
 	for rows.Next() {
 		var post models.Post
-		// var path []byte
 		if err := rows.Scan(&post.ID, &post.Author, &post.Forum, &post.Thread, &post.Message, &post.Created, &post.IsEdited, &post.Parent /*, &path*/); err != nil {
-			// log.Fatal(err)
 			log.Println("Error with posts: ", err)
 		}
 		if post.ID != 0 {
@@ -202,7 +193,7 @@ func PostGetParentTree(db *sql.DB, threadID int, limit int, desc bool, since int
 	return &posts
 }
 
-func PostGetDetails(db *sql.DB, postID int) (*models.PostFull, error) {
+func PostGetDetails(db *sql.DB, postID int, related []string) (*models.PostFull, error) {
 	postDetails := models.PostFull{}
 
 	post := models.Post{}
@@ -216,6 +207,44 @@ func PostGetDetails(db *sql.DB, postID int) (*models.PostFull, error) {
 
 	postDetails.Post = &post
 
+	for _, v := range related {
+		switch v {
+		case "user":
+			user := models.User{}
+			err = db.QueryRow(`
+				SELECT *
+				FROM users
+				WHERE nickname=$1
+			`,
+				post.Author).
+				Scan(&user.Nickname, &user.About, &user.Email, &user.Fullname)
+
+			postDetails.Author = &user
+		case "thread":
+			thread := models.Thread{}
+			err = db.QueryRow(`
+				SELECT *
+				FROM threads
+				WHERE id=$1
+			`,
+				post.Thread).
+				Scan(&thread.ID, &thread.Author, &thread.Forum, &thread.Slug, &thread.Title, &thread.Message, &thread.Created, &thread.Votes)
+
+			postDetails.Thread = &thread
+		case "forum":
+			forum := models.Forum{}
+			err = db.QueryRow(`
+				SELECT *
+				FROM forums
+				WHERE slug=$1
+			`,
+				post.Forum).
+				Scan(&forum.Slug, &forum.Posts, &forum.Threads, &forum.Title, &forum.User)
+
+			postDetails.Forum = &forum
+		}
+	}
+
 	return &postDetails, err
 }
 
@@ -223,7 +252,8 @@ func PostUpdate(db *sql.DB, postID int, message string) (*models.Post, error) {
 	post := models.Post{}
 	err := db.QueryRow(`
 		UPDATE posts
-		SET message=$2, isEdited=true
+		SET message=$2,
+			isEdited=(CASE WHEN message <> $2 THEN true ELSE false END)
 		WHERE id=$1
 		RETURNING id, author, forum, thread, message, created, isEdited, parent
 	`,
@@ -233,7 +263,7 @@ func PostUpdate(db *sql.DB, postID int, message string) (*models.Post, error) {
 	return &post, err
 }
 
-func PostGetById(db *sql.DB, postID int64) (*models.Post, error) {
+func PostGetById(db *sql.DB, postID int) (*models.Post, error) {
 	post := models.Post{}
 	err := db.QueryRow(`
 		SELECT id, author, forum, thread, message, created, isEdited, parent

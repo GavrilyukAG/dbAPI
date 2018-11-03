@@ -35,7 +35,7 @@ func (h *Handler) CreateThread(w http.ResponseWriter, r *http.Request) {
 
 	err = queries.ThreadInsert(h.DB, &thread)
 	if err != nil {
-		log.Println("Can not create thread", err)
+		log.Println("Cannot create thread", err)
 
 		res, err := queries.ThreadGetBySlug(h.DB, *thread.Slug)
 		if err == sql.ErrNoRows {
@@ -74,9 +74,6 @@ func (h *Handler) GetThreadsList(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// threads := models.Threads{}
-	// res := queries.ThreadQuery(h.DB, thread.Forum, limit, desc, since)
-	// threads = *res
 	threads := *queries.ThreadQuery(h.DB, thread.Forum, limit, desc, since)
 
 	if len(threads) == 0 {
@@ -147,7 +144,7 @@ func (h *Handler) UpdateThread(w http.ResponseWriter, r *http.Request) {
 
 	err = queries.ThreadUpdate(h.DB, &thread)
 	if err != nil {
-		log.Println("Can not UPDATE", err)
+		log.Println("Cannot UPDATE", err)
 		errMsg := models.Error{}
 		errMsg.ErrorUser(*thread.Slug)
 		network.ResponseConflict(w, errMsg)
@@ -167,7 +164,7 @@ func (h *Handler) UpdateThread(w http.ResponseWriter, r *http.Request) {
 	// default:
 	// 	err = queries.ThreadUpdate(h.DB, &thread)
 	// 	if err != nil {
-	// 		log.Println("Can not UPDATE", err)
+	// 		log.Println("Cannot UPDATE", err)
 	// 		errMsg := models.Error{}
 	// 		errMsg.ErrorUser(*thread.Slug)
 	// 		network.ResponseConflict(w, errMsg)

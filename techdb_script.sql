@@ -14,7 +14,7 @@ CREATE TABLE "users" (
 );
 
 CREATE TABLE forums (
-    slug CITEXT PRIMARY KEY,-- UNIQUE NOT NULL,
+    slug CITEXT PRIMARY KEY,
     posts INTEGER DEFAULT 0,
     threads INTEGER DEFAULT 0,
     title TEXT,

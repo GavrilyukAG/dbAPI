@@ -9,6 +9,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -58,7 +59,7 @@ func (h *Handler) CreatePost(w http.ResponseWriter, r *http.Request) {
 		post.Thread = threadID
 
 		if post.Parent != 0 {
-			parent, err := queries.PostGetById(h.DB, post.Parent)
+			parent, err := queries.PostGetById(h.DB, int(post.Parent))
 			if err != nil || post.Thread != parent.Thread {
 				errMsg := models.Error{}
 				errMsg.ErrorParent()
@@ -76,7 +77,7 @@ func (h *Handler) CreatePost(w http.ResponseWriter, r *http.Request) {
 
 		err = queries.PostInsert(h.DB, post)
 		if err != nil {
-			log.Println("Can not create post", err)
+			log.Println("Cannot create post", err)
 		}
 	}
 
@@ -142,8 +143,18 @@ func (h *Handler) GetPostDetails(w http.ResponseWriter, r *http.Request) {
 	id := mux.Vars(r)["id"]
 	postID, _ := strconv.Atoi(id)
 
+	vars := r.URL.Query().Get("related")
+	related := strings.Split(vars, ",")
+
+	if _, err := queries.PostGetById(h.DB, postID); err == sql.ErrNoRows {
+		errMsg := models.Error{}
+		errMsg.ErrorPost(id)
+		network.ResponseNotFound(w, errMsg)
+		return
+	}
+
 	postDetails := models.PostFull{}
-	tmp, err := queries.PostGetDetails(h.DB, postID)
+	tmp, err := queries.PostGetDetails(h.DB, postID, related)
 	if err != nil {
 		log.Println(err)
 	}
@@ -160,11 +171,22 @@ func (h *Handler) UpdatePost(w http.ResponseWriter, r *http.Request) {
 	json.NewDecoder(r.Body).Decode(&postMsg) // messgae
 
 	post := models.Post{}
-	tmp, err := queries.PostUpdate(h.DB, postID, postMsg.Message)
-	if err != nil {
-		log.Println("Can not update post", err)
+	if res, err := queries.PostGetById(h.DB, postID); err != nil {
+		errMsg := models.Error{}
+		errMsg.ErrorPost(id)
+		network.ResponseNotFound(w, errMsg)
+		return
+	} else {
+		post = *res
 	}
-	post = *tmp
+
+	if postMsg.Message != "" {
+		tmp, err := queries.PostUpdate(h.DB, postID, postMsg.Message)
+		if err != nil {
+			log.Println("Cannot update post", err)
+		}
+		post = *tmp
+	}
 
 	network.ResponseOK(w, post)
 }
