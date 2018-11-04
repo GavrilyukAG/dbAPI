@@ -2,7 +2,8 @@ package queries
 
 import (
 	"database/sql"
-	"dbAPI/models"
+
+	"github.com/GavrilyukAG/dbAPI/models"
 )
 
 func StatusGet(db *sql.DB) (*models.Status, error) {

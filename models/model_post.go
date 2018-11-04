@@ -8,8 +8,7 @@ type Post struct {
 	IsEdited bool   `json:"isEdited, omitempty"`
 	Message  string `json:"message, omitempty"`
 	Parent   int64  `json:"parent, omitempty"`
-	// Path     []byte `json:"-"`
-	Thread int `json:"thread,omitempty"`
+	Thread   int    `json:"thread,omitempty"`
 }
 
 type PostFull struct {

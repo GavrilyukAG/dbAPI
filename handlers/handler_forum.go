@@ -1,11 +1,12 @@
 package handlers
 
 import (
-	"dbAPI/models"
-	"dbAPI/network"
-	"dbAPI/queries"
 	"encoding/json"
 	"net/http"
+
+	"github.com/GavrilyukAG/dbAPI/models"
+	"github.com/GavrilyukAG/dbAPI/network"
+	"github.com/GavrilyukAG/dbAPI/queries"
 
 	"github.com/gorilla/mux"
 )

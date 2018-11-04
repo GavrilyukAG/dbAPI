@@ -2,8 +2,9 @@ package queries
 
 import (
 	"database/sql"
-	"dbAPI/models"
 	"log"
+
+	"github.com/GavrilyukAG/dbAPI/models"
 )
 
 func PostInsert(db *sql.DB, post *models.Post) error {
@@ -161,6 +162,7 @@ func PostGetParentTree(db *sql.DB, threadID int, limit int, desc bool, since int
 		`
 	} else {
 		queryStr += `
+		ORDER BY path
 		LIMIT NULLIF($2, 0)
 		) AS t ON t.id=path[1]
 		ORDER BY path

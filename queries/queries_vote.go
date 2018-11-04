@@ -2,7 +2,8 @@ package queries
 
 import (
 	"database/sql"
-	"dbAPI/models"
+
+	"github.com/GavrilyukAG/dbAPI/models"
 )
 
 func VoteInsert(db *sql.DB, vote models.Vote) (res sql.Result, err error) {

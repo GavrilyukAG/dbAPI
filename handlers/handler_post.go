@@ -2,15 +2,16 @@ package handlers
 
 import (
 	"database/sql"
-	"dbAPI/models"
-	"dbAPI/network"
-	"dbAPI/queries"
 	"encoding/json"
 	"log"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/GavrilyukAG/dbAPI/models"
+	"github.com/GavrilyukAG/dbAPI/network"
+	"github.com/GavrilyukAG/dbAPI/queries"
 
 	"github.com/gorilla/mux"
 )

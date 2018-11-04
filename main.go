@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"dbAPI/handlers"
+	"github.com/GavrilyukAG/dbAPI/handlers"
 
 	"github.com/gorilla/mux"
 )
@@ -19,7 +19,7 @@ func handleRequests(handlers *handlers.Handler) {
 	router.HandleFunc("/api/forum/{slug}/threads", handlers.GetThreadsList).Methods("GET")
 	router.HandleFunc("/api/forum/{slug}/users", handlers.GetUsersList).Methods("GET")
 
-	router.HandleFunc("/api/post/{id}/details", handlers.GetPostDetails).Methods("GET") //? GetThreadDetails
+	router.HandleFunc("/api/post/{id}/details", handlers.GetPostDetails).Methods("GET")
 	router.HandleFunc("/api/post/{id}/details", handlers.UpdatePost).Methods("POST")
 
 	router.HandleFunc("/api/service/clear", handlers.EraseDB).Methods("POST")
@@ -40,7 +40,8 @@ func handleRequests(handlers *handlers.Handler) {
 }
 
 func main() {
-	dataSource := "user=tpuser password=password dbname=tpforumdb sslmode=disable"
+	// dataSource := "host=127.0.0.1 port=5432 user=tpuser password=password dbname=tpforumdb sslmode=disable"
+	dataSource := "host=127.0.0.1 port=5432 user=docker password=docker dbname=docker sslmode=disable"
 	db, err := sql.Open("postgres", dataSource)
 	if err != nil {
 		// log.Fatal(err)

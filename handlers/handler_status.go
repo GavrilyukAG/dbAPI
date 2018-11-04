@@ -1,9 +1,10 @@
 package handlers
 
 import (
-	"dbAPI/models"
-	"dbAPI/network"
-	"dbAPI/queries"
+	"github.com/GavrilyukAG/dbAPI/models"
+	"github.com/GavrilyukAG/dbAPI/network"
+	"github.com/GavrilyukAG/dbAPI/queries"
+
 	"log"
 	"net/http"
 )

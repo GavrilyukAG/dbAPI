@@ -2,7 +2,8 @@ package queries
 
 import (
 	"database/sql"
-	"dbAPI/models"
+
+	"github.com/GavrilyukAG/dbAPI/models"
 )
 
 func ForumInsert(db *sql.DB, forum *models.Forum) error {

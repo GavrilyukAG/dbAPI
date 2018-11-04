@@ -2,8 +2,9 @@ package queries
 
 import (
 	"database/sql"
-	"dbAPI/models"
 	"log"
+
+	"github.com/GavrilyukAG/dbAPI/models"
 )
 
 func ThreadInsert(db *sql.DB, thread *models.Thread) error {

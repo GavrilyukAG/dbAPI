@@ -2,8 +2,9 @@ package queries
 
 import (
 	"database/sql"
-	"dbAPI/models"
 	"log"
+
+	"github.com/GavrilyukAG/dbAPI/models"
 )
 
 func UserInsert(db *sql.DB, user models.User) (res sql.Result, err error) {
