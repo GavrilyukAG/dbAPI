@@ -21,7 +21,7 @@ COPY techdb.sql techdb.sql
 RUN /etc/init.d/postgresql start &&\
     psql --command "CREATE USER docker WITH SUPERUSER PASSWORD 'docker';" &&\
     createdb -O docker docker &&\
-    psql -d docker -f run.sql &&\
+    psql -d docker -f techdb.sql &&\
     /etc/init.d/postgresql stop
 
 # Adjust PostgreSQL configuration so that remote connections to the
